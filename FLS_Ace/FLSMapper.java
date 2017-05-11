@@ -1,21 +1,19 @@
-import ij.*;
-import ij.gui.*;
-import ij.plugin.*;
-import ij.process.*;
-import ij.measure.*;
-
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
-import java.lang.Exception;
-import java.util.ArrayList;
 import java.lang.reflect.Method;
-
+import java.util.ArrayList;
 import java.util.Arrays;
 
-import javax.vecmath.Point3d;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.Prefs;
+import ij.gui.Roi;
+import ij.gui.ShapeRoi;
+import ij.measure.Calibration;
+import ij.plugin.Duplicator;
+import ij.plugin.GaussianBlur3D;
+import ij.plugin.ImageCalculator;
+import ij.plugin.Thresholder;
+import ij.process.ImageStatistics;
 
 public class FLSMapper{
 	
@@ -24,12 +22,11 @@ public class FLSMapper{
 			int Z = imp.getNSlices();
 			int T = imp.getNFrames();
 			
-			//DoG
-			GaussianBlur3D karl = new GaussianBlur3D();	//Use 3D Gaussian to apply a 2D Gaussian blur. Threading is broken in 2D Gaussian class.
+			//DoG	
 			ImagePlus mask = new Duplicator().run(imp, 1, 1, 1, Z, 1, T);
 			ImagePlus sub = new Duplicator().run(mask, 1, 1, 1, Z, 1, T);
-			karl.blur(mask,sigma,sigma,0d);
-			karl.blur(sub,sigma*k,sigma*k,0d);
+			GaussianBlur3D.blur(mask,sigma,sigma,0d);	//Use 3D Gaussian to apply a 2D Gaussian blur. Threading is broken in 2D Gaussian class.
+			GaussianBlur3D.blur(sub,sigma*k,sigma*k,0d);
 			ImageCalculator ic = new ImageCalculator();
 			ic.run("Subtract stack", mask, sub);
 			sub.close();
@@ -75,7 +72,7 @@ public class FLSMapper{
 		Calibration cal = imp.getCalibration();
 		double pixelW = cal.pixelWidth;
 		double pixelD = cal.pixelDepth;
-		double frameInterval = cal.frameInterval;
+		//double frameInterval = cal.frameInterval;
 		
 		ImagePlus mask = segment(imp,sigma,k,threshold);
 		
@@ -100,7 +97,7 @@ public class FLSMapper{
 			IJ.run(mask, "Select None", "");
 			
 			//get points through Z
-			ArrayList<Point3d> points = new ArrayList<Point3d>();
+			ArrayList<Point3b> points = new ArrayList<Point3b>();
 			ArrayList<Roi> rois = new ArrayList<Roi>();
 			for(int z=base+1;z<=Z;z++){
 				mask.setPosition(1,z,t+1);
@@ -111,7 +108,7 @@ public class FLSMapper{
 				IJ.run(mask, "Select None", "");
 				for(int i=0;i<split.length;i++){
 					Rectangle rect = split[i].getBounds();
-					points.add(new Point3d((rect.x + (rect.width/2))*pixelW,(rect.y + (rect.height/2))*pixelW,z*pixelD));
+					points.add(new Point3b((rect.x + (rect.width/2))*pixelW,(rect.y + (rect.height/2))*pixelW,z*pixelD));
 					split[i].setPosition(z);
 					rois.add(split[i]);
 				}
@@ -129,7 +126,7 @@ public class FLSMapper{
 				areas[b] = imp.getRoi();
 				ImageStatistics stats = imp.getStatistics();
 				FLS fls = new FLS(areas[b],stats,pixelW,pixelD,base,minLength);
-				Point3d last = fls.coord;
+				Point3b last = fls.coord;
 				double minD = Double.POSITIVE_INFINITY;
 				int minI = -1;
 				boolean end = false;

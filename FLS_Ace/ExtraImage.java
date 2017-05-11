@@ -4,11 +4,6 @@ import ij.plugin.*;
 import java.util.Arrays;
 
 public class ExtraImage{
-	private int NAME = 0;
-	private int REGEX = 1;
-	private int METHOD = 2;
-	private int SIGMA = 3;
-	private int K = 4;
 	public String name;
 	public ImagePlus image;
 	public String regex;

@@ -1,26 +1,18 @@
-import ij.*;
-import ij.gui.*;
-import ij.plugin.*;
-import ij.process.*;
-import ij.measure.*;
-
-import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.lang.Exception;
 import java.util.ArrayList;
-
 import java.util.Arrays;
 import java.util.HashMap;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
+import ij.IJ;
+import ij.gui.Roi;
+import ij.process.ImageStatistics;
 
 
 public class FLS{
-public ArrayList<Point3d> parts;
+public ArrayList<Point3b> parts;
 public ArrayList<Roi> rois;
 public Roi base;
-public Point3d coord;
+public Point3b coord;
 public int index;
 public double path, straight, baseArea, perim, circ, pixelW, pixelD;
 public double actinMean, minLength;
@@ -34,8 +26,8 @@ public ImageStatistics TIRFstats;
 		this.base = base;
 		this.actinMean = stats.mean;
 		Rectangle rect = base.getBounds();
-		this.coord = new Point3d((rect.x+(rect.width/2))*pixelW,(rect.y+(rect.height/2))*pixelW,baseZ*pixelD);
-		this.parts = new ArrayList<Point3d>();
+		this.coord = new Point3b((rect.x+(rect.width/2))*pixelW,(rect.y+(rect.height/2))*pixelW,baseZ*pixelD);
+		this.parts = new ArrayList<Point3b>();
 		this.rois = new ArrayList<Roi>();	//Rois along the length of the FLS
 		this.index = -1;
 		this.pixelW = pixelW;
@@ -65,7 +57,7 @@ public ImageStatistics TIRFstats;
 		}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 	}
 	
-	public void addPart(Point3d point, Roi roi){
+	public void addPart(Point3b point, Roi roi){
 	try{
 		parts.add(point);
 		rois.add(roi);

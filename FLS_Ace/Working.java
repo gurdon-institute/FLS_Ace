@@ -2,14 +2,14 @@
 
 import java.awt.Color;
 import java.awt.Dimension;
-
 import java.awt.GridLayout;
-import java.awt.Toolkit;
 
-import javax.swing.*;
-import javax.swing.BoxLayout;
+import javax.swing.BorderFactory;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
 
 public class Working extends JDialog{
+private static final long serialVersionUID = -3141933717642274785L;
 public static int WIDTH = 120;
 public static int HEIGHT = 60;
 private static final Dimension size = new Dimension(WIDTH,HEIGHT);

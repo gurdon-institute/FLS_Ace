@@ -1,11 +1,15 @@
-import ij.*;
-import ij.gui.*;
-import ij.plugin.*;
-import ij.process.*;
-import ij.measure.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import ij.IJ;
+import ij.ImagePlus;
+import ij.gui.Overlay;
+import ij.gui.Roi;
+import ij.gui.TextRoi;
+import ij.measure.ResultsTable;
+import ij.process.ImageStatistics;
 
 public class FLSOutput{
 private ImagePlus imp;
@@ -169,7 +173,7 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 				rt.setValue("Actin Mean",row,fls.actinMean);
 				if(fls.TIRFstats!=null){
 					rt.setValue("Actin TIRF Object Mean",row,fls.TIRFstats.mean);
-					double area = fls.TIRFstats.area;
+					//double area = fls.TIRFstats.area;
 					rt.setValue("Actin TIRF Object Area (\u00B5m\u00B2)",row,fls.TIRFstats.area*pixW*pixW);
 					double perim = fls.tirfRoi.getLength();
 					double circ = (4d*Math.PI*fls.TIRFstats.area)/(perim*perim);
@@ -225,7 +229,6 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 				row++;
 			}
 		}
-		if(rt==null){throw new Exception("ResultsTable null for "+name);}
 		rt.show("FLS_Ace "+name);
 	}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 	}
