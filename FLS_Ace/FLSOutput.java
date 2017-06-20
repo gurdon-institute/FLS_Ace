@@ -69,6 +69,11 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 				FLS fls = flss[t].get(f);
 				traceTable.setValue("Index",row,fls.index);
 				traceTable.setValue("Time",row,t);
+				traceTable.setValue("Path",row,fls.pathLength());
+				traceTable.setValue("Straight",row,fls.straightLength());
+				traceTable.setValue("Straightness",row,fls.straightness());
+				traceTable.setValue("Base Area",row,fls.baseArea);
+				traceTable.setValue("Base Circularity",row,fls.circularity());
 				double csum = 0d;
 				for(int i=0;i<fls.rois.size();i++){
 					imp.setPosition(fls.rois.get(i).getPosition());
