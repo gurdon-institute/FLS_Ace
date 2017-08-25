@@ -44,12 +44,12 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 		this.pixW = imp.getCalibration().pixelWidth;
 		this.pixD = imp.getCalibration().pixelDepth;
 		overlay(imp);
-		table();
-		trace();
+		table(true);
+		trace(true);
 	}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}	
 	}
 	
-	public void trace(){
+	public ResultsTable trace(boolean show_results_window){
 	try{
 		ImagePlus fascin = null;
 		if(extra!=null){
@@ -69,11 +69,6 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 				FLS fls = flss[t].get(f);
 				traceTable.setValue("Index",row,fls.index);
 				traceTable.setValue("Time",row,t);
-				traceTable.setValue("Path",row,fls.pathLength());
-				traceTable.setValue("Straight",row,fls.straightLength());
-				traceTable.setValue("Straightness",row,fls.straightness());
-				traceTable.setValue("Base Area",row,fls.baseArea);
-				traceTable.setValue("Base Circularity",row,fls.circularity());
 				double csum = 0d;
 				for(int i=0;i<fls.rois.size();i++){
 					imp.setPosition(fls.rois.get(i).getPosition());
@@ -94,8 +89,11 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 			}
 			
 		}
-		traceTable.show(name+" Traces");
+		if (show_results_window)
+			traceTable.show(name+" Traces");
+		return traceTable;
 	}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}	
+		return new ResultsTable();
 	}
 	
 	public void overlay(ImagePlus imp){
@@ -155,7 +153,7 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 	}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 	}
 	
-	public void table(){
+	public ResultsTable table(boolean show_results_window){
 	try{
 		ResultsTable rt = new ResultsTable();
 		rt.setPrecision(4);
@@ -234,8 +232,11 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 				row++;
 			}
 		}
-		rt.show("FLS_Ace "+name);
+		if (show_results_window)
+			rt.show("FLS_Ace "+name);
+		return rt;
 	}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
+		return new ResultsTable();
 	}
 	
 }

@@ -46,6 +46,7 @@ import ij.measure.Calibration;
 import ij.plugin.Concatenator;
 import ij.plugin.PlugIn;
 import ij.process.ImageStatistics;
+import ij.measure.ResultsTable;
 
 public class FLS_Ace implements PlugIn,ActionListener{
 private JFrame gui;
@@ -258,10 +259,13 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 	public class Batch implements Runnable{
 		private File file;
 		private int pos;
+		private ArrayList<ResultsTable> tables;
+
 		public Batch(File file, int pos){
 			try{
 				this.file = file;
 				this.pos = pos;
+				this.tables = new ArrayList<ResultsTable>();
 			}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}	
 		}
 		private int getTimeFromString(String str){
@@ -279,7 +283,10 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 			return time;
 		}
 		
-		public void run(){
+		public void run() {
+			run(true);
+		}
+		public void run(boolean show_results_windows){
 		try{
 			Working working = new Working(file.getName(),pos);
 			ArrayList<ExtraImage> extra = getExtraConfig();
@@ -378,8 +385,8 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 			}
 			working.setText("outputting results");
 			final FLSOutput ro = new FLSOutput(expActin,file.getName(),tCal,flss,extra,base,voxelW);
-			ro.table();
-			ro.trace();
+			this.tables.add(ro.table(show_results_windows));
+			this.tables.add(ro.trace(show_results_windows));
 			if(save){
 				ro.overlay(expActin);
 				IJ.saveAs(expActin, "Tiff", path+foo+file.getName()+".tif");
@@ -387,6 +394,10 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 			}
 			working.dispose();
 		}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}	
+		}
+		
+		public ArrayList<ResultsTable> get_tables(){
+			return this.tables;
 		}
 	}
 	
