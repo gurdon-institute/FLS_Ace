@@ -18,6 +18,7 @@ public double path, straight, baseArea, perim, circ, pixelW, pixelD;
 public double actinMean, minLength;
 public HashMap<String, Double> geneMeans;
 public HashMap<String, Double> geneFractions;
+public HashMap<String, Double> geneBackgroundMeans;
 public Roi tirfRoi;
 public ImageStatistics TIRFstats;
 
@@ -40,6 +41,7 @@ public ImageStatistics TIRFstats;
 		circ = -1d;
 		geneMeans = new HashMap<String,Double>();
 		geneFractions = new HashMap<String,Double>();
+		geneBackgroundMeans = new HashMap<String,Double>();
 	}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 	}
 	
@@ -74,6 +76,10 @@ public ImageStatistics TIRFstats;
 	
 	public void addGeneFraction(String name,double frac){
 		geneFractions.put(name,frac);
+	}
+
+	public void addGeneBackgroundMean(String name,double background){
+		geneBackgroundMeans.put(name,background);
 	}
 	
 	public double straightLength(){

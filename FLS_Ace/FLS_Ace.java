@@ -348,6 +348,7 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 							ImagePlus eimp = IJ.openImage(eFiles[k].getAbsolutePath());
 							e.image = eimp;
 							ImagePlus eimpMask = e.mask(eimp);
+							ShapeRoi bgonly = new ShapeRoi(new Roi(0, 0, eimp.getWidth(), eimp.getHeight()));
 							for(FLS fls:flss[t]){
 								working.setText("measuring "+e.name);
 								eimpMask.setRoi(fls.base);
@@ -356,6 +357,7 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 								eimp.setRoi(fls.base);
 								stats = eimp.getStatistics();
 								fls.addGeneMean(e.name,stats.mean);
+								bgonly = bgonly.not(new ShapeRoi(fls.base));
 								//IJ.log(e.name+" : "+stats.mean);
 							}	
 							if(e.name.matches("actin-TIRF")){
@@ -377,7 +379,12 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 									}
 								}
 							}
-							
+							eimp.setRoi(bgonly);
+							ImageStatistics stats = eimp.getStatistics();
+							double background_mean = stats.mean;
+							for(FLS fls:flss[t]){
+								fls.addGeneBackgroundMean(e.name,background_mean);
+							}
 							eimp.close(); eimpMask.close();
 						}
 					}

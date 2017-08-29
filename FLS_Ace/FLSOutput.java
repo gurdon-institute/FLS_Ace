@@ -212,6 +212,22 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 					}
 					for(ExtraImage e:extra){
 						boolean got = false;
+						for(int g=0;g<keys.length;g++){ 
+							//IJ.log(keys[g]);
+							if(keys[g].matches(e.regex)){
+								//IJ.log(keys[g]+" matches "+e.regex+" for "+e.name);
+								double background_mean = fls.geneBackgroundMeans.get(keys[g]);
+								rt.setValue(e.name+"_background",row,background_mean);
+								got = true;
+							}
+							//else{IJ.log(keys[g]+" !matches "+e.regex+" for "+e.name);}
+						}
+						if(!got){
+							rt.setValue(e.name+"_background",row,-1);
+						}
+					}
+					for(ExtraImage e:extra){
+						boolean got = false;
 						for(int g=0;g<keys.length;g++){
 							if(keys[g].matches(e.regex)){
 								double frac = fls.geneFractions.get(keys[g]);
