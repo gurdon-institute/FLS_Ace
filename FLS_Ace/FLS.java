@@ -94,20 +94,28 @@ public File expPath;
 	}
 
 	public double straightLength(){
-		double longest = -1d;
-		for(int p=0;p<parts.size();p++){
-			double ed = coord.distance(parts.get(p));
-			longest = Math.max(longest,ed);
+	        if (parts.size() == 0) {
+		        straight = 0d;
+		} else {
+		        double longest = -1d;
+			for(int p=0;p<parts.size();p++){
+			        double ed = coord.distance(parts.get(p));
+				longest = Math.max(longest,ed);
+			}
+			straight = longest;
 		}
-		straight = longest;
 		return straight;
 	}
 	
 	public double pathLength(){
-		path = coord.distance(parts.get(0));
-		for(int p=1;p<parts.size();p++){
-			path += parts.get(p-1).distance(parts.get(p));
-		}
+	        if (parts.size() == 0) {
+		        path = 0d;
+	        } else {
+	                path = coord.distance(parts.get(0));	
+	                for(int p=1;p<parts.size();p++){
+			        path += parts.get(p-1).distance(parts.get(p));
+			}
+	        }
 		return path;
 	}
 	
