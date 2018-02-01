@@ -8,6 +8,8 @@ import ij.IJ;
 import ij.gui.Roi;
 import ij.process.ImageStatistics;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 public class FLS{
 public ArrayList<Point3b> parts;
@@ -154,4 +156,53 @@ public File expPath;
 		return 0;
 	}
 
+
+    public JSONObject to_json() {
+	JSONObject geneMeanJS = new JSONObject();
+	for (HashMap.Entry<String, Double> entry : this.geneMeans.entrySet())
+	    geneMeanJS.put(entry.getKey(), entry.getValue());
+	JSONObject geneBGMeanJS = new JSONObject();
+	for (HashMap.Entry<String, Double> entry : this.geneBackgroundMeans.entrySet())
+	    geneBGMeanJS.put(entry.getKey(), entry.getValue());
+	JSONObject geneBGStdJS = new JSONObject();
+	for (HashMap.Entry<String, Double> entry : this.geneBackgroundStds.entrySet())
+	    geneBGStdJS.put(entry.getKey(), entry.getValue());
+
+	JSONObject js = new JSONObject();
+	js.put("path", this.pathLength());
+	js.put("straight", this.straightLength());
+	js.put("baseArea", this.baseArea);
+	js.put("baseCircularity", this.circularity());
+	js.put("straightness", this.straightness());
+	js.put("perimeter", this.perim);
+	JSONArray coords = new JSONArray();
+	coords.add(this.coord.x);
+	coords.add(this.coord.y);
+	js.put("position", coords);
+	js.put("isFLS", this.isReal());
+	js.put("actinMean", this.actinMean);
+	js.put("actinBackgroundMean", this.actinBackgroundMean);
+	js.put("actinBackgroundStd", this.actinBackgroundStd);
+	js.put("localActinBackgroundMean", this.localActinBackgroundMean);
+	js.put("localActinBackgroundStd", this.localActinBackgroundStd);
+	if (this.TIRFstats != null) {
+	    js.put("Actin TIRF Object Mean", this.TIRFstats.mean);
+	    //double area = fls.TIRFstats.area;
+	    js.put("Actin TIRF Object Area", this.TIRFstats.area*pixelW*pixelW);
+	    double perim = this.tirfRoi.getLength();
+	    double circ = (4d*Math.PI*this.TIRFstats.area)/(perim*perim);
+	    if (circ < 0.05) {
+		perim = perim*pixelW;
+		circ = (4d*Math.PI*this.TIRFstats.area)/(perim*perim);
+	    }
+	    if (circ > 1)
+		circ=1;
+	    js.put("Actin TIRF Object Circularity", circ);
+	}
+	js.put("proteinIntensitiesMean", geneMeanJS);
+	js.put("proteinBackgroundIntensitiesMean", geneBGMeanJS);
+	js.put("proteinBackgroundIntensitiesStd", geneBGStdJS);
+
+	return js;
+    }
 }

@@ -439,6 +439,10 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 		public ArrayList<ResultsTable> get_tables(){
 			return this.tables;
 		}
+
+	    public String get_json() {
+		return this.json;
+	    }
 	}
 	
 	private void createDefaultConfig(){
