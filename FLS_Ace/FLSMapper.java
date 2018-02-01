@@ -121,6 +121,7 @@ public class FLSMapper{
 			//construct FLSs
 			imp.setSlice(base);
 			for(int b=0;b<areas.length;b++){
+			        imp.setPosition(1, base, t+1);
 				imp.setRoi(areas[b]);
 				IJ.run(imp, "Interpolate", "interval=1 smooth");
 				areas[b] = imp.getRoi();
