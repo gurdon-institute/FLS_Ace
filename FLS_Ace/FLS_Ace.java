@@ -80,7 +80,7 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 		gui.setLayout(new BoxLayout(gui.getContentPane(),BoxLayout.Y_AXIS));
 		
 		JPanel controlPanel = new JPanel();
-		baseSpinner = new JSpinner(new SpinnerNumberModel(base,1,10,1));
+		baseSpinner = new JSpinner(new SpinnerNumberModel(base,1,100,1));
 		controlPanel.add(new JLabel("Base Z:"));
 		controlPanel.add(baseSpinner);
 		saveTick = new JCheckBox("Save batch images",save);
@@ -235,7 +235,7 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 		boolean gotExp = false;
 		
 		if(inputFile.getName().matches(expRegex)){
-			new Batch(inputFile,0).run();
+		    new Batch(inputFile,0, true).run();
 			gotExp = true;
 		}
 		else{
@@ -245,10 +245,9 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 			for(int f=0;f<files.length;f++){
 				if(files[f].isDirectory()&&files[f].getName().matches(expRegex)){
 					final File expDir = files[f];
-					Batch job = new Batch(expDir,pos);
+					Batch job = new Batch(expDir,pos, true);
 					exec.submit(job);
 					gotExp = true;
-					pos += Working.HEIGHT;
 				}
 			}
 			exec.shutdown();
@@ -261,12 +260,15 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 		private File file;
 		private int pos;
 		private ArrayList<ResultsTable> tables;
-
-		public Batch(File file, int pos){
+	        private String json;
+	        private boolean show_results_windows;
+	    
+	    public Batch(File file, int pos, boolean show_results_windows){
 			try{
 				this.file = file;
 				this.pos = pos;
 				this.tables = new ArrayList<ResultsTable>();
+				this.show_results_windows = show_results_windows;
 			}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}	
 		}
 		private int getTimeFromString(String str){
@@ -284,12 +286,8 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 			return time;
 		}
 		
-		public void run() {
-			run(true);
-		}
-		public void run(boolean show_results_windows){
+		public void run(){
 		try{
-			Working working = new Working(file.getName(),pos);
 			ArrayList<ExtraImage> extra = getExtraConfig();
 			String filePath = file.getAbsolutePath();
 			File[] exp = new File(filePath).listFiles();
@@ -306,7 +304,6 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 							gotT = true;
 							ImagePlus actin = IJ.openImage(timePath);
 							int tin = getTimeFromString(expPath);
-							working.setText("got actin.TIF for t"+tin);
 							maxT = Math.max(maxT,tin);
 							actin.setTitle("actin-t"+tin);
 							Calibration cal = new Calibration();
@@ -320,7 +317,6 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 			}
 			if(!gotT){IJ.error("No frames found",filePath+" does not contain any frame directories.");return;}
 			for(int i1=0;i1<actinList.size();i1++){
-				working.setText("constructing actin hyperstack");
 				int t1 = getTimeFromString( actinList.get(i1).getTitle() );
 				for(int i2=i1+1;i2<actinList.size();i2++){
 					int t2 = getTimeFromString( actinList.get(i2).getTitle() );
@@ -334,7 +330,6 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 			Concatenator conc = new Concatenator();
 			ImagePlus expActin = conc.concatenate(actinList.toArray(new ImagePlus[0]),false);
 			expActin.setTitle(file.getName()+"_actin");
-			working.setText("mapping FLSs...");
 			ArrayList<FLS>[] flss = FLSMapper.map(expActin,actinSigma,actinK,actinMethod,base,minLength,maxDist);
 
 			RoiScaler rs = new RoiScaler();
@@ -366,13 +361,11 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 				for(ExtraImage e:extra){
 					for(int k=0;k<eFiles.length;k++){
 						if(eFiles[k].getAbsolutePath().matches(".*"+e.regex+".TIF")){
-							working.setText("got "+e.name+" for t"+t);
 							//IJ.log("got "+e.name+" for t"+t);
 							ImagePlus eimp = IJ.openImage(eFiles[k].getAbsolutePath());
 							e.image = eimp;
 							ImagePlus eimpMask = e.mask(eimp);
 							for(FLS fls:flss[t]){
-								working.setText("measuring "+e.name);
 								eimpMask.setRoi(fls.base);
 								ImageStatistics stats = eimpMask.getStatistics();
 								fls.addGeneFraction(e.name,stats.mean/255d);
@@ -388,7 +381,6 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 								//IJ.log(e.name+" : "+stats.mean);
 							}	
 							if(e.name.matches("actin-TIRF")){
-								working.setText("found actin TIRF for t"+t);
 								IJ.run(eimpMask, "Create Selection", "");
 								if(eimpMask.getRoi()==null){continue;}
 								Roi[] split = new ShapeRoi(eimpMask.getRoi()).getRois();
@@ -432,16 +424,15 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 				    fls.actinBackgroundStd = background_std;
 				}
 			}
-			working.setText("outputting results");
 			final FLSOutput ro = new FLSOutput(expActin,file.getName(),tCal,flss,extra,base,voxelW);
-			this.tables.add(ro.table(show_results_windows));
-			this.tables.add(ro.trace(show_results_windows));
+			this.tables.add(ro.table(this.show_results_windows));
+			this.tables.add(ro.trace(this.show_results_windows));
+			this.json = ro.json();
 			if(save){
-				ro.overlay(expActin);
-				IJ.saveAs(expActin, "Tiff", path+foo+file.getName()+".tif");
+			        ro.overlay(expActin);
+				IJ.saveAs(expActin, "Tiff", path+foo+file.getName()+"_rois.tif");
 				expActin.close();
 			}
-			working.dispose();
 		}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}	
 		}
 		
