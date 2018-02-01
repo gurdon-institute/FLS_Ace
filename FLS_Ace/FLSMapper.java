@@ -150,11 +150,12 @@ public class FLSMapper{
 						end = false;
 					}
 				}
-				if(fls.parts.size()!=0){
-					fls.index = nextIndex;
-					nextIndex++;
-					flsArr[t].add(fls);
-				}
+				// Accept zero-length FLSs, comment out condition.
+				//if(fls.parts.size()!=0){
+				fls.index = nextIndex;
+				nextIndex++;
+				flsArr[t].add(fls);
+				//}
 			}
 			IJ.run(imp, "Select None", "");
 			
