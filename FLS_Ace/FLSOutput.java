@@ -2,11 +2,16 @@ import java.awt.Color;
 import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Collections;
+import java.io.File;
 
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Overlay;
 import ij.gui.Roi;
+import ij.gui.ShapeRoi;
+import ij.plugin.RoiScaler;
 import ij.gui.TextRoi;
 import ij.measure.ResultsTable;
 import ij.process.ImageStatistics;
@@ -21,6 +26,7 @@ private int baseZ;
 private double pixW, pixD;
 private static final double CONTAINED_FRACTION = 0.01d;
 private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
+private static final String foo = System.getProperty("file.separator");
 
 	//constructor for use in high-throughput analysis
 	public FLSOutput(ImagePlus imp,String name,double tCal,ArrayList<FLS>[] flss,ArrayList<ExtraImage> extra,int baseZ,double pw){
@@ -118,6 +124,17 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 				}
 				base.setStrokeColor(colour);
 				ol.add(base);
+				Roi localbg = flss[t].get(f).localbg;
+				if (localbg!=null) {
+				    if(Z>1&&T>1){
+					localbg.setPosition(1,baseZ,t+1);
+				    }
+				    else if(Z>1&&T==1){
+					localbg.setPosition(baseZ);
+				    }
+				    localbg.setStrokeColor(Color.YELLOW);
+				    ol.add(localbg);
+				}
 				TextRoi label = new TextRoi(x,y,""+flss[t].get(f).index,labelFont);
 				if(Z>1&&T>1){
 					label.setPosition(1,baseZ,t+1);
@@ -174,6 +191,10 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 				rt.setValue("Y",row,fls.coord.y);
 				rt.setValue("Is an FLS?",row,fls.isReal());
 				rt.setValue("Actin Mean",row,fls.actinMean);
+				rt.setValue("Actin Background Mean",row,fls.actinBackgroundMean);
+				rt.setValue("Actin Background Std",row,fls.actinBackgroundStd);
+				rt.setValue("Local Actin Background Mean",row,fls.localActinBackgroundMean);
+				rt.setValue("Local Actin Background Std",row,fls.localActinBackgroundStd);
 				if(fls.TIRFstats!=null){
 					rt.setValue("Actin TIRF Object Mean",row,fls.TIRFstats.mean);
 					//double area = fls.TIRFstats.area;
@@ -198,7 +219,7 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 						boolean got = false;
 						for(int g=0;g<keys.length;g++){ 
 							//IJ.log(keys[g]);
-							if(keys[g].matches(e.regex)){
+						        if(keys[g].matches(e.regex) || keys[g].matches(e.name)){
 								//IJ.log(keys[g]+" matches "+e.regex+" for "+e.name);
 								double mean = fls.geneMeans.get(keys[g]);
 								rt.setValue(e.name,row,mean);
@@ -214,10 +235,12 @@ private static final Font labelFont = new Font(Font.SANS_SERIF,Font.PLAIN,10);
 						boolean got = false;
 						for(int g=0;g<keys.length;g++){ 
 							//IJ.log(keys[g]);
-							if(keys[g].matches(e.regex)){
+						        if(keys[g].matches(e.regex) || keys[g].matches(e.name)){
 								//IJ.log(keys[g]+" matches "+e.regex+" for "+e.name);
 								double background_mean = fls.geneBackgroundMeans.get(keys[g]);
+								double background_std = fls.geneBackgroundStds.get(keys[g]);
 								rt.setValue(e.name+"_background",row,background_mean);
+								rt.setValue(e.name+"_std",row,background_std);
 								got = true;
 							}
 							//else{IJ.log(keys[g]+" !matches "+e.regex+" for "+e.name);}

@@ -2,6 +2,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.io.File;
 
 import ij.IJ;
 import ij.gui.Roi;
@@ -11,21 +12,28 @@ import ij.process.ImageStatistics;
 public class FLS{
 public ArrayList<Point3b> parts;
 public ArrayList<Roi> rois;
-public Roi base;
+public Roi base, localbg;
 public Point3b coord;
 public int index;
 public double path, straight, baseArea, perim, circ, pixelW, pixelD;
-public double actinMean, minLength;
+public double actinMean, actinBackgroundMean, actinBackgroundStd, minLength;
+public double localActinBackgroundMean, localActinBackgroundStd;
 public HashMap<String, Double> geneMeans;
 public HashMap<String, Double> geneFractions;
 public HashMap<String, Double> geneBackgroundMeans;
+public HashMap<String, Double> geneBackgroundStds;
 public Roi tirfRoi;
 public ImageStatistics TIRFstats;
-
-	public FLS(Roi base,ImageStatistics stats,double pixelW,double pixelD,int baseZ,double minLength){
+public File expPath;
+    
+        public FLS(Roi base,ImageStatistics stats,double pixelW,double pixelD,int baseZ,double minLength){
 	try{
 		this.base = base;
 		this.actinMean = stats.mean;
+		this.actinBackgroundMean = -1d;
+		this.actinBackgroundStd = -1d;
+		this.localActinBackgroundMean = -1d;
+		this.localActinBackgroundStd = -1d;
 		Rectangle rect = base.getBounds();
 		this.coord = new Point3b((rect.x+(rect.width/2))*pixelW,(rect.y+(rect.height/2))*pixelW,baseZ*pixelD);
 		this.parts = new ArrayList<Point3b>();
@@ -42,6 +50,8 @@ public ImageStatistics TIRFstats;
 		geneMeans = new HashMap<String,Double>();
 		geneFractions = new HashMap<String,Double>();
 		geneBackgroundMeans = new HashMap<String,Double>();
+		geneBackgroundStds = new HashMap<String,Double>();
+		this.expPath = null;
 	}catch(Exception e){IJ.log(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 	}
 	
@@ -78,10 +88,11 @@ public ImageStatistics TIRFstats;
 		geneFractions.put(name,frac);
 	}
 
-	public void addGeneBackgroundMean(String name,double background){
+        public void addGeneBackground(String name,double background, double std){
 		geneBackgroundMeans.put(name,background);
+		geneBackgroundStds.put(name,std);
 	}
-	
+
 	public double straightLength(){
 		double longest = -1d;
 		for(int p=0;p<parts.size();p++){

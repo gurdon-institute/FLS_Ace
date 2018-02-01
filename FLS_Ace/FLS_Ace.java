@@ -47,6 +47,7 @@ import ij.plugin.Concatenator;
 import ij.plugin.PlugIn;
 import ij.process.ImageStatistics;
 import ij.measure.ResultsTable;
+import ij.plugin.RoiScaler;
 
 public class FLS_Ace implements PlugIn,ActionListener{
 private JFrame gui;
@@ -335,11 +336,33 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 			expActin.setTitle(file.getName()+"_actin");
 			working.setText("mapping FLSs...");
 			ArrayList<FLS>[] flss = FLSMapper.map(expActin,actinSigma,actinK,actinMethod,base,minLength,maxDist);
-			
+
+			RoiScaler rs = new RoiScaler();
 			for(int t=0;t<maxT;t++){
 				if(flss[t]==null){continue;}
+				for(FLS fls:flss[t]){
+				    fls.expPath = new File(filePath);
+				}
+				
 				String ePath = filePath+foo+"t"+(t+1)+foo;
 				File[] eFiles = new File(ePath).listFiles();
+
+				ShapeRoi bgroi = new ShapeRoi(new Roi(0, 0, expActin.getWidth(), expActin.getHeight()));
+				for(FLS fls:flss[t]){
+				    bgroi = bgroi.not(new ShapeRoi(rs.scale(fls.base, 2, 2, true)));
+				}
+
+				for (FLS fls:flss[t]) {
+				    ShapeRoi localbg = new ShapeRoi(rs.scale(fls.base, 3, 3, true));
+				    localbg = localbg.not(new ShapeRoi(fls.base)).and(bgroi);
+				    fls.localbg = localbg;
+				    expActin.setPosition(1,base,t+1);
+				    expActin.setRoi(localbg);
+				    ImageStatistics stats = expActin.getStatistics();
+				    fls.localActinBackgroundMean = stats.mean;
+				    fls.localActinBackgroundStd = stats.stdDev;
+				}
+				
 				for(ExtraImage e:extra){
 					for(int k=0;k<eFiles.length;k++){
 						if(eFiles[k].getAbsolutePath().matches(".*"+e.regex+".TIF")){
@@ -348,7 +371,6 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 							ImagePlus eimp = IJ.openImage(eFiles[k].getAbsolutePath());
 							e.image = eimp;
 							ImagePlus eimpMask = e.mask(eimp);
-							ShapeRoi bgonly = new ShapeRoi(new Roi(0, 0, eimp.getWidth(), eimp.getHeight()));
 							for(FLS fls:flss[t]){
 								working.setText("measuring "+e.name);
 								eimpMask.setRoi(fls.base);
@@ -357,7 +379,12 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 								eimp.setRoi(fls.base);
 								stats = eimp.getStatistics();
 								fls.addGeneMean(e.name,stats.mean);
-								bgonly = bgonly.not(new ShapeRoi(fls.base));
+
+								ShapeRoi localbg = new ShapeRoi(rs.scale(fls.base, 3, 3, true));
+								localbg = localbg.not(new ShapeRoi(fls.base)).and(bgroi);
+								eimp.setRoi(localbg);
+								stats = eimp.getStatistics();
+								fls.addGeneBackground(e.name, stats.mean, stats.stdDev);
 								//IJ.log(e.name+" : "+stats.mean);
 							}	
 							if(e.name.matches("actin-TIRF")){
@@ -379,15 +406,30 @@ private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
 									}
 								}
 							}
-							eimp.setRoi(bgonly);
-							ImageStatistics stats = eimp.getStatistics();
-							double background_mean = stats.mean;
-							for(FLS fls:flss[t]){
-								fls.addGeneBackgroundMean(e.name,background_mean);
-							}
+
+							// ImagePlus e_o_imp = IJ.openImage(eFiles[k].getAbsolutePath().replaceFirst(".TIF", "_original.TIF"));
+							// e_o_imp.setRoi(bgroi);
+							// ImageStatistics stats = e_o_imp.getStatistics();
+							// double background_mean = stats.mean;
+							// double background_std = stats.stdDev;
+							// for(FLS fls:flss[t]){
+							//     fls.addGeneBackground(e.name,background_mean, background_std);
+							// }
+							// e_o_imp.close();
+							
 							eimp.close(); eimpMask.close();
 						}
 					}
+				}
+
+				expActin.setPosition(1,base,t+1);
+				expActin.setRoi(bgroi);
+				ImageStatistics stats = expActin.getStatistics();
+				double background_mean = stats.mean;
+				double background_std = stats.stdDev;
+				for(FLS fls:flss[t]){
+				    fls.actinBackgroundMean = background_mean;
+				    fls.actinBackgroundStd = background_std;
 				}
 			}
 			working.setText("outputting results");
