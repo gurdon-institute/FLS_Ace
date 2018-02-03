@@ -64,6 +64,13 @@
 	<k>3</k>
 </gene>
 <gene>
+	<name>Snx9</name>
+	<regex>[Ss][Nn][Xx]9</regex>
+	<method>Moments</method>
+	<sigma>1.5</sigma>
+	<k>3</k>
+</gene>
+<gene>
 	<name>VASP</name>
 	<regex>[Vv][Aa][Ss][Pp]</regex>
 	<method>Otsu</method>
