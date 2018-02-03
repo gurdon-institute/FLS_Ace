@@ -175,6 +175,7 @@ private static final String foo = System.getProperty("file.separator");
 
     public String json() {
 	HashMap<Integer, HashMap<Integer, FLS>> fls_time = new HashMap<Integer, HashMap<Integer, FLS>>();
+	HashMap<Integer, HashMap<String, ImagePlus>> protein_imps = new HashMap<Integer, HashMap<String, ImagePlus>>();
 	for (int t=0; t<flss.length; t++) {
 	    for (int i=0; i<flss[t].size(); i++) {
 		FLS fls = flss[t].get(i);
@@ -186,23 +187,23 @@ private static final String foo = System.getProperty("file.separator");
 		    fls_time.put(fls.index, entry);
 		}
 	    }
-	}
 
-	ImagePlus fascin = null;
-	File[] eFiles = new File(file.getAbsolutePath()).listFiles();
-	for(int k=0;k<eFiles.length;k++){
-	    if(eFiles[k].getAbsolutePath().matches(".*[Ff]ascin.TIF")) {
-		fascin = IJ.openImage(eFiles[k].getAbsolutePath());
-		if (fascin.getNSlices() < 2) {
-		    fascin.close();
-		    fascin = null;
+	    // Preload extra images
+	    HashMap<String, ImagePlus> tp_imps = new HashMap<String, ImagePlus>();
+	    protein_imps.put(t, tp_imps);
+	    String ePath = flss[t].get(0).expPath+foo+"t"+(t+1)+foo;
+	    File[] eFiles = new File(ePath).listFiles();
+	    for (ExtraImage e : extra) {
+		for(int k=0;k<eFiles.length;k++){
+		    if(eFiles[k].getAbsolutePath().matches(".*"+e.regex+".TIF")) {
+			tp_imps.put(e.name, IJ.openImage(eFiles[k].getAbsolutePath()));
+			break;
+		    }
 		}
-		break;
 	    }
 	}
 
 	JSONArray js_fls_array = new JSONArray();
-	HashMap<Integer, HashMap<String, ImagePlus>> protein_imps = new HashMap<Integer, HashMap<String, ImagePlus>>();
 	HashMap<Integer, ShapeRoi> allflsrois = new HashMap<Integer, ShapeRoi>();
 	RoiScaler rs = new RoiScaler();
 	for (HashMap.Entry<Integer, HashMap<Integer, FLS>> entry : fls_time.entrySet()) {
@@ -211,13 +212,16 @@ private static final String foo = System.getProperty("file.separator");
 	    HashMap<Integer, FLS> timepoints = entry.getValue();
 	    File expPath = null;
 	    for (HashMap.Entry<Integer, FLS> fls_entry : timepoints.entrySet()) {
+		int t = fls_entry.getKey();
+		HashMap<String, ImagePlus> tp_imps = protein_imps.get(t);
 		FLS fls = fls_entry.getValue();
+
 		JSONObject js_timepoint_entry = fls.to_json();
 		JSONArray js_shaft_actin_mean = new JSONArray();
 		JSONArray js_shaft_actin_area = new JSONArray();
 		JSONArray js_shaft_actin_bgmean = new JSONArray();
 		JSONArray js_shaft_actin_bgstd = new JSONArray();
-		int t = fls_entry.getKey();
+
 		for (int i=0; i<fls.rois.size(); i++) {
 		    Roi roi = fls.rois.get(i);
 		    imp.setPosition(1, baseZ+i+1, t+1);
@@ -241,28 +245,33 @@ private static final String foo = System.getProperty("file.separator");
 		js_timepoint_entry.put("shaftActinBackgroundMean", js_shaft_actin_bgmean);
 		js_timepoint_entry.put("shaftActinBackgroundStd", js_shaft_actin_bgstd);
 
-		if (fascin!=null) {
-		    JSONArray js_shaft_fascin_mean = new JSONArray();
-		    JSONArray js_shaft_fascin_bgmean = new JSONArray();
-		    JSONArray js_shaft_fascin_bgstd = new JSONArray();
+		for (HashMap.Entry<String, ImagePlus> tp_imp_entry : tp_imps.entrySet()) {
+		    ImagePlus eimp = tp_imp_entry.getValue();
+		    if (eimp.getNSlices() < 2)
+			continue;
+		    String ename = tp_imp_entry.getKey();
+		    
+		    JSONArray js_shaft_extra_mean = new JSONArray();
+		    JSONArray js_shaft_extra_bgmean = new JSONArray();
+		    JSONArray js_shaft_extra_bgstd = new JSONArray();
 		    for (int i=0; i<fls.rois.size(); i++) {
 			Roi roi = fls.rois.get(i);
-			fascin.setPosition(1, baseZ+i+1, t+1);
-			fascin.setRoi(roi);
-			ImageStatistics stats = fascin.getStatistics();
-			js_shaft_fascin_mean.add(stats.mean);
+			eimp.setPosition(1, baseZ+i+1, t+1);
+			eimp.setRoi(roi);
+			ImageStatistics stats = eimp.getStatistics();
+			js_shaft_extra_mean.add(stats.mean);
 			
 			ShapeRoi localbg = new ShapeRoi(rs.scale(roi, 3, 3, true));
 			localbg = localbg.not(new ShapeRoi(rs.scale(roi, 2, 2, true)));
-			fascin.setRoi(localbg);
-			stats = fascin.getStatistics();
-			js_shaft_fascin_bgmean.add(stats.mean);
-			js_shaft_fascin_bgstd.add(stats.stdDev);
+			eimp.setRoi(localbg);
+			stats = eimp.getStatistics();
+			js_shaft_extra_bgmean.add(stats.mean);
+			js_shaft_extra_bgstd.add(stats.stdDev);
 			
 		    }
-		    js_timepoint_entry.put("shaftFascinMean", js_shaft_fascin_mean);
-		    js_timepoint_entry.put("shaftFascinBackgroundMean", js_shaft_fascin_bgmean);
-		    js_timepoint_entry.put("shaftFascinBackgroundStd", js_shaft_fascin_bgstd);
+		    js_timepoint_entry.put("shaft"+ename+"Mean", js_shaft_extra_mean);
+		    js_timepoint_entry.put("shaft"+ename+"BackgroundMean", js_shaft_extra_bgmean);
+		    js_timepoint_entry.put("shaft"+ename+"BackgroundStd", js_shaft_extra_bgstd);
 		}
 		
 		js_timepoint_entry.put("Time (sec)", fls_entry.getKey() * tCal);
@@ -273,14 +282,12 @@ private static final String foo = System.getProperty("file.separator");
 	    js_fls_entry.put("timepoints", js_fls_timepoints);
 
 	    int first_tp = Collections.min(timepoints.keySet());
-	    if ((extra != null) && (first_tp > 0)) {
+	    if (first_tp > 0) {
 		FLS first_fls = timepoints.get(first_tp);
 		JSONObject pre_intensities_tps = new JSONObject();
 		JSONObject pre_bgintensities_tps = new JSONObject();
 		JSONObject pre_bgstdintensities_tps = new JSONObject();
 		for (int t = 0; t < first_tp; t++) {
-		    if (!protein_imps.containsKey(t))
-			protein_imps.put(t, new HashMap<String, ImagePlus>());
 		    HashMap<String, ImagePlus> tp_imps = protein_imps.get(t);
 
 		    if (!allflsrois.containsKey(t)) {
@@ -296,31 +303,19 @@ private static final String foo = System.getProperty("file.separator");
 		    JSONObject pre_bgintensities = new JSONObject();
 		    JSONObject pre_bgstdintensities = new JSONObject();
 
-		    String ePath = first_fls.expPath+foo+"t"+(t+1)+foo;
-		    for (ExtraImage e : extra) {
-			if (!tp_imps.containsKey(e.name)) {
-			    boolean got = false;
-			    for(int k=0;k<eFiles.length;k++){
-				if(eFiles[k].getAbsolutePath().matches(".*"+e.regex+".TIF")) {
-				    tp_imps.put(e.name, IJ.openImage(eFiles[k].getAbsolutePath()));
-				    got = true;
-				    break;
-				}
-			    }
-			    if (!got)
-				continue;
-			}
-			ImagePlus eimp = tp_imps.get(e.name);
+		    for (HashMap.Entry<String, ImagePlus> tp_imp_entry : protein_imps.get(t).entrySet()) {
+			ImagePlus eimp = tp_imp_entry.getValue();
+			String imgname = tp_imp_entry.getKey();
 			eimp.setRoi(first_fls.base);
 			ImageStatistics stats = eimp.getStatistics();
-			pre_intensities.put(e.name, stats.mean);
+			pre_intensities.put(imgname, stats.mean);
 
 			ShapeRoi localbg = new ShapeRoi(rs.scale(first_fls.base, 3, 3, true));
 			localbg = localbg.not(allflsroi);
 			eimp.setRoi(localbg);
 			stats = eimp.getStatistics();
-			pre_bgintensities.put(e.name, stats.mean);
-			pre_bgstdintensities.put(e.name, stats.stdDev);
+			pre_bgintensities.put(imgname, stats.mean);
+			pre_bgstdintensities.put(imgname, stats.stdDev);
 		    }
 		    pre_intensities_tps.put(t, pre_intensities);
 		    pre_bgintensities_tps.put(t, pre_bgintensities);
@@ -332,9 +327,6 @@ private static final String foo = System.getProperty("file.separator");
 	    }
 
 	    js_fls_array.add(js_fls_entry);
-
-	    if (fascin!=null)
-		fascin.close();
 	}
 
 	for (HashMap<String, ImagePlus> tpentry : protein_imps.values()) {
