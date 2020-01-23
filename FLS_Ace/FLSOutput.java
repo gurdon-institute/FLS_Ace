@@ -191,13 +191,15 @@ private static final String foo = System.getProperty("file.separator");
 	    // Preload extra images
 	    HashMap<String, ImagePlus> tp_imps = new HashMap<String, ImagePlus>();
 	    protein_imps.put(t, tp_imps);
-	    String ePath = flss[t].get(0).expPath+foo+"t"+(t+1)+foo;
-	    File[] eFiles = new File(ePath).listFiles();
-	    for (ExtraImage e : extra) {
-		for(int k=0;k<eFiles.length;k++){
-		    if(eFiles[k].getAbsolutePath().matches(".*"+e.regex+".TIF")) {
-			tp_imps.put(e.name, IJ.openImage(eFiles[k].getAbsolutePath()));
-			break;
+	    if (flss[t].size() > 0) {
+		String ePath = flss[t].get(0).expPath+foo+"t"+(t+1)+foo;
+		File[] eFiles = new File(ePath).listFiles();
+		for (ExtraImage e : extra) {
+		    for(int k=0;k<eFiles.length;k++){
+			if(eFiles[k].getAbsolutePath().matches(".*"+e.regex+".TIF")) {
+			    tp_imps.put(e.name, IJ.openImage(eFiles[k].getAbsolutePath()));
+			    break;
+			}
 		    }
 		}
 	    }

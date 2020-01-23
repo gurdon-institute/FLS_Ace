@@ -71,12 +71,12 @@ private double maxDist = Prefs.get("FLS_Ace.maxDist",2d);
 private static final String[] methods = {"Triangle","Otsu","Huang","MaxEntropy"};
 private static final String foo = System.getProperty("file.separator");
 private static final String expRegex = ".*exp[0-9]{1,2}[a-zA-Z]?";
-private static final Pattern timeRegex = Pattern.compile("t[0-9]{1,2}$");
+private static final Pattern timeRegex = Pattern.compile("t[0-9]+$");
 
 	public void run(String _){
 	try{
 		gui = new JFrame("FLS_Ace");
-		gui.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("logo_icon.gif")));
+		//gui.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("logo_icon.gif")));
 		gui.setLayout(new BoxLayout(gui.getContentPane(),BoxLayout.Y_AXIS));
 		
 		JPanel controlPanel = new JPanel();
