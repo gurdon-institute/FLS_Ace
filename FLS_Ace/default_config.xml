@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+<gene>
+	<name>fascin</name>
+	<regex>[Ff]ascin</regex>
+	<method>Triangle</method>
+	<sigma>3</sigma>
+	<k>5</k>
+</gene>
+<gene>
+	<name>cdc42</name>
+	<regex>[Cc][Dd][Cc]42</regex>
+	<method>Triangle</method>
+	<sigma>3</sigma>
+	<k>4</k>
+</gene>
+<gene>
+	<name>NWASP</name>
+	<regex>[Nn]-?[Ww][Aa][Ss][Pp]</regex>
+	<method>Triangle</method>
+	<sigma>2.5</sigma>
+	<k>4</k>
+</gene>
+<gene>
+	<name>GBD</name>
+	<regex>[Gg][Bb][Dd]</regex>
+	<method>Triangle</method>
+	<sigma>3</sigma>
+	<k>4.5</k>
+</gene>
+<gene>
+	<name>ena</name>
+	<regex>[Ee]na</regex>
+	<method>Triangle</method>
+	<sigma>2.5</sigma>
+	<k>3</k>
+</gene>
+<gene>
+	<name>FBP17</name>
+	<regex>[Ff][Bb][Pp]17</regex>
+	<method>Triangle</method>
+	<sigma>3</sigma>
+	<k>5</k>
+</gene>
+<gene>
+	<name>profilin</name>
+	<regex>[Pp]rofilin</regex>
+	<method>Triangle</method>
+	<sigma>3</sigma>
+	<k>4</k>
+</gene>
+<gene>
+	<name>Dia2</name>
+	<regex>[Dd]ia2</regex>
+	<method>Triangle</method>
+	<sigma>3</sigma>
+	<k>4</k>
+</gene>
+<gene>
+	<name>toca</name>
+	<regex>[Tt][Oo][Cc][Aa]</regex>
+	<method>Moments</method>
+	<sigma>1.5</sigma>
+	<k>3</k>
+</gene>
+<gene>
+	<name>Snx9</name>
+	<regex>[Ss][Nn][Xx]9</regex>
+	<method>Moments</method>
+	<sigma>1.5</sigma>
+	<k>3</k>
+</gene>
+<gene>
+	<name>VASP</name>
+	<regex>[Vv][Aa][Ss][Pp]</regex>
+	<method>Otsu</method>
+	<sigma>2</sigma>
+	<k>3</k>
+</gene>
+<gene>
+	<name>actin-TIRF</name>
+	<regex>TIRFact</regex>
+	<method>Otsu</method>
+	<sigma>1.5</sigma>
+	<k>3</k>
+</gene>
+</config>
