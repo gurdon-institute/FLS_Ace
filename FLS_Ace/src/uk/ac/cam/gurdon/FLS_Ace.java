@@ -50,6 +50,7 @@ import ij.gui.ShapeRoi;
 import ij.measure.Calibration;
 import ij.measure.ResultsTable;
 import ij.plugin.Concatenator;
+import ij.plugin.HyperStackConverter;
 import ij.plugin.RoiScaler;
 import ij.process.ImageStatistics;
 
@@ -596,6 +597,12 @@ public class FLS_Ace implements Command, ActionListener {
 
 	public static void main(String[] arg) {
 		ImageJ.main(arg);
+		
+		ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\Kazimir\\Actin.TIF");
+		final ImagePlus image = HyperStackConverter.toHyperStack(img, img.getNChannels(), img.getNSlices(), img.getNFrames());
+		image.setDisplayMode(IJ.GRAYSCALE);
+		
+		image.show();
 		new FLS_Ace().run();
 	}
 

@@ -34,8 +34,7 @@ public class FLSOutput {
 	private static final String foo = System.getProperty("file.separator");
 
 	// constructor for use in high-throughput analysis
-	public FLSOutput(ImagePlus imp, String name, double tCal, ArrayList<FLS>[] flss, ArrayList<ExtraImage> extra,
-			int baseZ, double pw) {
+	public FLSOutput(ImagePlus imp, String name, double tCal, ArrayList<FLS>[] flss, ArrayList<ExtraImage> extra, int baseZ, double pw) {
 		this.imp = imp;
 		this.name = name;
 		this.tCal = tCal;
@@ -105,6 +104,7 @@ public class FLSOutput {
 				}
 
 			}
+			imp.killRoi();
 			if (show_results_window)
 				traceTable.show(name + " Traces");
 			return traceTable;
@@ -390,8 +390,7 @@ public class FLSOutput {
 							circ = 1;
 						}
 						rt.setValue("Actin TIRF Object Circularity", row, circ);
-					} else if (extra != null) { // make all columns for every output, pointless but requested by
-												// Geoorogrow
+					} else if (extra != null) { // make all columns for every output, pointless but requested by Geoorogrow
 						rt.setValue("Actin TIRF Object Mean", row, -1);
 						rt.setValue("Actin TIRF Object Area (\u00B5m\u00B2)", row, -1);
 						rt.setValue("Actin TIRF Object Circularity", row, -1);

@@ -116,8 +116,7 @@ public class FLSMapper {
 					IJ.run(mask, "Select None", "");
 					for (int i = 0; i < split.length; i++) {
 						Rectangle rect = split[i].getBounds();
-						points.add(new Point3b((rect.x + (rect.width / 2)) * pixelW,
-								(rect.y + (rect.height / 2)) * pixelW, z * pixelD));
+						points.add(new Point3b((rect.x + (rect.width / 2)) * pixelW, (rect.y + (rect.height / 2)) * pixelW, z * pixelD));
 						split[i].setPosition(z);
 						rois.add(split[i]);
 					}
